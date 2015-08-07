@@ -129,7 +129,7 @@ Ext.define('CustomApp', {
                 project: this.getContext().getProject()._ref
             },
             fetch: ['Name', 'Project', 'State', 'PercentDoneByStoryCount', 'FormattedID', 'Owner', 'c_LaunchRisk', 'c_OriginalLaunch', 'c_TargetLaunch', 'c_Customer', 'Notes', "UserStories"]
-        }).load().then({
+        }).load().then({                              //Asynchronous Call
             success: this._loadUserStories,
             scope: this
         }).then({
@@ -256,16 +256,15 @@ Ext.define('CustomApp', {
 
             var featureTreeNode = that._createFeatureTreeNode(thisFlattenedFeatureProjectKey);
             Ext.Array.each(thisFlattenedFeatureProjectValue, function(thisProjectUserStory) {
-
-
+                
                 var projectUserStoryTreeNode = that._createProjectUserStoryTreeNode(thisProjectUserStory.key);
                 var thisUserStoryCollectionObject = thisProjectUserStory.value;
                 var current = that;
+                
                 Ext.Array.each(thisUserStoryCollectionObject, function(currentUserStory) {
                     var userStoryTreeNode = current._createUserStoryTreeNode(currentUserStory);
                     projectUserStoryTreeNode.appendChild(userStoryTreeNode);
                 });
-
                 featureTreeNode.appendChild(projectUserStoryTreeNode);
             });
             featureRootNode.appendChild(featureTreeNode);
