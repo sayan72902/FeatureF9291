@@ -9,40 +9,102 @@
         Rally.onReady(function () {
                 Ext.define('FeatureTreeModel', {
     extend: 'Ext.data.TreeModel',
-    fields: [
-            {name: '_ref', type: 'string'},
-            {name: '_type', type: 'string'},
-            {name: 'Name', type: 'string'},
-            {name: 'Project', type: 'object'},
-            {name: 'State', type: 'object'},
-            {name: 'PercentDoneByStoryCount', type: 'double'},
-            {name: 'FormattedID', type: 'string'},
-            {name: 'Owner', type: 'object'},
-            {name: 'c_Customer', type: 'string'},
-            {name: 'c_LaunchRisk', type: 'object'},
-            {name: 'c_OriginalLaunch', type: 'object'},
-            {name: 'c_TargetLaunch', type: 'string'},
-            {name: 'Notes', type: 'string'}
-        ],
-    hasMany: {model: 'UserStoryModel', name:'userStories', associationKey: 'userStories'}
+    fields: [{
+        name: '_ref',
+        type: 'string'
+    }, {
+        name: '_type',
+        type: 'string'
+    }, {
+        name: 'Name',
+        type: 'string'
+    }, {
+        name: 'Project',
+        type: 'object'
+    }, {
+        name: 'State',
+        type: 'object'
+    }, {
+        name: 'PercentDoneByStoryCount',
+        type: 'double'
+    }, {
+        name: 'FormattedID',
+        type: 'string'
+    }, {
+        name: 'Owner',
+        type: 'object'
+    }, {
+        name: 'c_Customer',
+        type: 'string'
+    }, {
+        name: 'c_LaunchRisk',
+        type: 'object'
+    }, {
+        name: 'c_OriginalLaunch',
+        type: 'object'
+    }, {
+        name: 'c_TargetLaunch',
+        type: 'string'
+    }, {
+        name: 'Notes',
+        type: 'string'
+    }],
+    hasMany: {
+        model: 'ProjectUserStoryModel',
+        name: 'projectUserStories',
+        associationKey: 'projectUserStories'
+    }
 });
-
+Ext.define('ProjectTreeModel', {
+    extend: 'Ext.data.TreeModel',
+    fields: [{
+        name: '_ref',
+        type: 'string'
+    }, {
+        name: 'Name',
+        type: 'string'
+    }],
+    hasMany: {
+        model: 'UserStoryModel',
+        name: 'userStories',
+        associationKey: 'userStories'
+    }
+});
 
 Ext.define('HierarchicalRequirementTreeModel', {
     extend: 'Ext.data.TreeModel',
-    fields: [
-            {name: '_ref',type: 'string'}, 
-            {name: '_type',type: 'string'}, 
-            {name: 'Name',type: 'string'}, 
-            {name: 'Project',type: 'object'}, 
-            {name: 'ScheduleState',type: 'string'},
-            {name: 'FormattedID',type: 'string'}, 
-            {name: 'Owner',type: 'object'},
-            {name: 'Notes',type: 'string'}
-    ]
-    //hasMany: {model: 'UserStoryTreeModel', name:'userStories', associationKey: 'userStories'}
+    fields: [{
+            name: '_ref',
+            type: 'string'
+        }, {
+            name: '_type',
+            type: 'string'
+        }, {
+            name: 'Name',
+            type: 'string'
+        }, {
+            name: 'Project',
+            type: 'object'
+        }, {
+            name: 'ScheduleState',
+            type: 'string'
+        }, {
+            name: 'FormattedID',
+            type: 'string'
+        }, {
+            name: 'Owner',
+            type: 'object'
+        }, {
+            name: 'Notes',
+            type: 'string'
+        }]
+        //hasMany: {model: 'UserStoryTreeModel', name:'userStories', associationKey: 'userStories'}
 });
 
+/*Created to hold respective collection objects*/
+var featureProjectsColl = [];
+var projectUserStoriesColl = [];
+var userStoriesColl = [];
 
 Ext.define('CustomApp', {
     extend: 'Rally.app.App',
@@ -59,7 +121,7 @@ Ext.define('CustomApp', {
 
         var that = this;
 
-        /*console.log("inside data block");*/
+        /*Filters out Feature records based on State.*/
         var featureFilter = [{
             property: "State.Name",
             //operator: "=",
@@ -68,6 +130,7 @@ Ext.define('CustomApp', {
 
         /*console.log('got data!', featureFilter);*/
 
+        /*Creates a store to hold Feature Records and their associated User Stories*/
         var featureStore = Ext.create('Rally.data.wsapi.Store', {
             model: "PortfolioItem/Feature",
             autoLoad: true,
@@ -81,18 +144,12 @@ Ext.define('CustomApp', {
             scope: this
         }).then({
             success: function(userStories) {
-                // if(!results){
-
-                // }
-                //console.log((userStories));
-
                 that._createGrid(userStories);
             },
             failue: function() {
                 console.log("Wrong");
             }
         });
-
     },
 
     _loadUserStories: function(features) {
@@ -111,135 +168,87 @@ Ext.define('CustomApp', {
 
     _createGrid: function(userStories) {
         var that = this;
-        var allFeaturesAdded = [];
-        var featureProjectsColl = [];
-        var projectUserStoriesColl = [];
-        var interimUSColl = [];
-
-        userStories = _.flatten(userStories);
-      
-        var userStoriesColl = [];
-
-        _.each(userStories, function(thisUserStory) {
-            userStoriesColl.push(thisUserStory.data);
-        });
-        
-        
+        var userStoryData = _.flatten(userStories);
 
 
-        _.each(userStoriesColl, function(thisUserStory) {
-            var featureRecord = thisUserStory.Feature;
-            var projectRecord = thisUserStory.Project;
-            if(featureRecord && !that.__isFeatureAlreadyPresent(allFeaturesAdded, featureRecord)){
-                projectUserStoriesColl.clear();
-                
-                if(projectRecord && !projectUserStoriesColl.containsKey(projectRecord)){
-                    interimUSColl.clear();
-                    interimUSColl.add(thisUserStory);
-                    projectUserStoriesColl.push({key:projectRecord, value:interimUSColl});
+        _.each(userStoryData, function(thisUserStory) {
+
+            var thisUserStoryData = thisUserStory.data;
+            var featureRecord = thisUserStoryData.Feature;
+            var projectRecord = thisUserStoryData.Project;
+
+
+            if (featureProjectsColl !== null && featureProjectsColl.length > 0) {
+                var isPresent = false;
+                _.each(featureProjectsColl, function(thisFeatureProject) {
+                    var thisFeatureProjectKey = thisFeatureProject.key;
+                    if (thisFeatureProjectKey && thisFeatureProjectKey.FormattedID === featureRecord.FormattedID) {
+                        projectUserStoriesColl = thisFeatureProject.value;
+                        isPresent = true;
+                    }
+                });
+                if (!isPresent) {
+                    projectUserStoriesColl = [];
+                    userStoriesColl = [];
+                    that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
+                    featureProjectsColl.push({
+                        key: featureRecord,
+                        value: projectUserStoriesColl
+                    });
                 }
-                else{
-                    interimUSColl.add(thisUserStory);
+                else {
+                    that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
                 }
-                featureProjectsColl.push({key:featureRecord, value:projectUserStoriesColl});
             }
-            else{
-                
-                if(projectRecord && !projectUserStoriesColl.containsKey(projectRecord)){
-                    interimUSColl.clear();
-                    interimUSColl.add(thisUserStory);
-                    projectUserStoriesColl.push({key:projectRecord, value:interimUSColl});
-                }
-                else{
-                    interimUSColl.add(thisUserStory);
-                }
-                featureProjectsColl.add(projectUserStoriesColl);
-                allFeaturesAdded.push(featureRecord);
+            else {
+                that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
+                featureProjectsColl.push({
+                    key: featureRecord,
+                    value: projectUserStoriesColl
+                });
             }
         });
-        
         console.log(featureProjectsColl);
-            /*var featureRecord = thisUserStory.Feature;
-            if (featureRecord && !that.__isFeatureAlreadyPresent(allFeaturesAdded, featureRecord)){
-                var projectRecord = thisUserStory.Project;
-                if (projectRecord && (projectRecord.Name === thisUserStory.Project.Name)) {
-                    if (!_.contains(interimUSColl, thisUserStory)) {
-                        interimUSColl.push(thisUserStory);
-                    }
-                }*/
-                
-                
-                
-            
-            
-            
-/*            //thisRecord.FeatureID = thisRecord.Feature.FormattedID;
-            
+        that._createFeatureTreeStore(_.flatten(featureProjectsColl));
 
-            if (featureRecord && !that.__isFeatureAlreadyPresent(allFeaturesAdded, featureRecord)) {
-                var projectRecord = featureRecord.Project;
+    },
 
-                if (projectRecord && (projectRecord.Name === thisUserStory.Project.Name)) {
-                    if (!_.contains(interimUSColl, thisUserStory)) {
-                        interimUSColl.push(thisUserStory);
-                    }
+    _mapUserStoriesToProject: function(projectRecord, thisUserStoryData) {
+
+        if (projectUserStoriesColl !== null && projectUserStoriesColl.length > 0) {
+            var isPresent = false;
+            _.each(projectUserStoriesColl, function(thisProjectUserStory) {
+                var thisprojectUserStoryKey = thisProjectUserStory.key;
+                if (thisprojectUserStoryKey && thisprojectUserStoryKey._ref === projectRecord._ref) {
+                    userStoriesColl = thisProjectUserStory.value;
+                    isPresent = true;
                 }
-
+            });
+            if (!isPresent) {
+                userStoriesColl = [];
+                userStoriesColl.push(thisUserStoryData);
                 projectUserStoriesColl.push({
                     key: projectRecord,
-                    value: interimUSColl
+                    value: userStoriesColl
                 });
+            }
+            else {
+                userStoriesColl.push(thisUserStoryData);
+            }
+        }
+        else {
+            userStoriesColl.push(thisUserStoryData);
+            projectUserStoriesColl.push({
+                key: projectRecord,
+                value: userStoriesColl
+            });
+        }
 
-                console.log(projectUserStoriesColl);
-                //var featureUserStoriesColl = [];
-                //var userStoryColl = that._getAssociatedUserStoryRecords(featureID, userStoriesColl);
-                //console.log(featureUserStoriesColl);
-
-                /*featureUserStoriesColl.push({
-                    key: featureRecord,
-                    value: userStoryColl
-                });
-*/
-                //allFeaturesAdded.push(featureRecord);
-
-                //allFeaturesWithChildUSerStoriesColl.push(featureUserStoriesColl);
-
-            
-       
-        
-        
-        //console.log(allFeaturesAdded);
-        //console.log(projectUserStoriesColl);
-
-        //this._createFeatureTreeStore(_.flatten(allFeaturesWithChildUSerStoriesColl));*/
     },
 
-    __isFeatureAlreadyPresent: function(allFeaturesAdded, featureRecord) {
-        var isPresent = false;
-        Ext.Array.each(allFeaturesAdded, function(thisFeature) {
-            if (thisFeature._ref === featureRecord._ref) {
-                isPresent = true;
-                return false;
-            }
-        });
 
-        return isPresent;
-    },
 
-    /*_getAssociatedUserStoryRecords: function(thisFeatureID, userStoriesColl) {
-        var currentUserStoriesColl = [];
-        Ext.Array.each(userStoriesColl, function(thisUserStory) {
-            if (thisUserStory.Feature && thisUserStory.Feature.FormattedID === thisFeatureID) {
-                if (!_.contains(currentUserStoriesColl, thisUserStory)) {
-                    currentUserStoriesColl.push(thisUserStory);
-                }
-            }
-        });
-        //console.log(currentUserStoriesColl);
-        return currentUserStoriesColl;
-    },*/
-
-    _createFeatureTreeStore: function(flattenedFeaturesWithUSColl) {
+    _createFeatureTreeStore: function(flattenedFeatureProjectsColl) {
         var featureRootNode = Ext.create('FeatureTreeModel', {
             Name: 'Feature Root',
             text: 'Feature Root',
@@ -247,7 +256,7 @@ Ext.define('CustomApp', {
             expandable: true,
             expanded: true
         });
-        this._createFeatureNodesWithChildUSerStories(featureRootNode, flattenedFeaturesWithUSColl);
+        this._createFeatureNodesWithProjects(featureRootNode, flattenedFeatureProjectsColl);
         var panelHeight = 550;
         var userStoryTreePanel = this._createFeatureTreePanelGrid(featureRootNode, panelHeight);
 
@@ -259,17 +268,26 @@ Ext.define('CustomApp', {
         this.add(userStoryTreePanel);
     },
 
-    _createFeatureNodesWithChildUSerStories: function(featureRootNode, flattenedFeaturesWithUSColl) {
+    _createFeatureNodesWithProjects: function(featureRootNode, flattenedFeatureProjectsColl) {
         var that = this;
-        Ext.Array.each(flattenedFeaturesWithUSColl, function(thisFlattenedFeatureWithUS) {
+        Ext.Array.each(flattenedFeatureProjectsColl, function(thisFlattenedFeatureProject) {
+            var thisFlattenedFeatureProjectKey = thisFlattenedFeatureProject.key;
+            var thisFlattenedFeatureProjectValue = thisFlattenedFeatureProject.value;
 
-            var featureTreeNode = that._createFeatureTreeNode(thisFlattenedFeatureWithUS.key);
-            Ext.Array.each(thisFlattenedFeatureWithUS.value, function(thisUserStory) {
-                /*Extract out Team information. */
-                var userStoryTreeNode = that._createUserStoryTreeNode(thisUserStory);
-                featureTreeNode.appendChild(userStoryTreeNode);
+            var featureTreeNode = that._createFeatureTreeNode(thisFlattenedFeatureProjectKey);
+            Ext.Array.each(thisFlattenedFeatureProjectValue, function(thisProjectUserStory) {
+
+
+                var projectUserStoryTreeNode = that._createProjectUserStoryTreeNode(thisProjectUserStory.key);
+                var thisUserStoryCollectionObject = thisProjectUserStory.value;
+                var current = that;
+                Ext.Array.each(thisUserStoryCollectionObject, function(currentUserStory) {
+                    var userStoryTreeNode = current._createUserStoryTreeNode(currentUserStory);
+                    projectUserStoryTreeNode.appendChild(userStoryTreeNode);
+                });
+
+                featureTreeNode.appendChild(projectUserStoryTreeNode);
             });
-
             featureRootNode.appendChild(featureTreeNode);
         });
     },
@@ -299,7 +317,26 @@ Ext.define('CustomApp', {
         return featureTreeNode;
     },
 
+    _createProjectUserStoryTreeNode: function(thisProjectUserStory) {
+        //console.log(thisProjectUserStory.Owner,thisProjectUserStory.Owner._refObjectName);
+        var noEntryText = '--No Entry--';
+        var noOwnerText = '--No Owner--';
+        var projectUserStoryTreeNode = Ext.create('ProjectTreeModel', {
+            _ref: thisProjectUserStory._ref,
+            Name: thisProjectUserStory.Name,
+            //FormattedID: thisProjectUserStory.FormattedID,
+            //Project: this._getFieldText(thisProjectUserStory._refObjectName, noEntryText),
+            //ScheduleState: thisProjectUserStory.ScheduleState,
+            Owner: (thisProjectUserStory.Owner) ? this._getFieldText(thisProjectUserStory.Owner._refObjectName, noEntryText) : noOwnerText,
+            Notes: thisProjectUserStory.Notes,
+            expandable: (thisProjectUserStory._type === 'Project') ? true : false,
+            expanded: false
+        });
+        return projectUserStoryTreeNode;
+    },
+
     _createUserStoryTreeNode: function(thisUserStory) {
+        console.log(thisUserStory.Project, thisUserStory.Project._refObjectName);
         var noEntryText = '--No Entry--';
         var noOwnerText = '--No Owner--';
         var userStoryTreeNode = Ext.create('HierarchicalRequirementTreeModel', {
