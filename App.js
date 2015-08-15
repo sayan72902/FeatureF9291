@@ -1,51 +1,28 @@
 Ext.define('FeatureTreeModel', {
     extend: 'Ext.data.TreeModel',
     fields: [
-        {name: '_ref',type: 'string'}, 
-        {name: '_type',type: 'string'}, 
-        {name: 'Name',type: 'string'}, 
-        {name: 'Project',type: 'object'}, 
-        {name: 'State',type: 'object'}, 
-        {name: 'PercentDoneByStoryCount',type: 'double'}, 
-        {name: 'FormattedID',type: 'string'}, 
-        {name: 'Owner',type: 'object'}, 
-        {name: 'c_Customer',type: 'string'}, 
-        {name: 'c_LaunchRisk',type: 'object'}, 
-        {name: 'c_OriginalLaunch',type: 'object'}, 
-        {name: 'c_TargetLaunch',type: 'string'}, 
+        {name: '_ref',type: 'string'}, {name: '_type',type: 'string'}, 
+        {name: 'Name',type: 'string'}, {name: 'Project',type: 'object'}, 
+        {name: 'State',type: 'object'}, {name: 'PercentDoneByStoryCount',type: 'double'}, 
+        {name: 'FormattedID',type: 'string'}, {name: 'Owner',type: 'object'}, 
+        {name: 'c_Customer',type: 'string'}, {name: 'c_LaunchRisk',type: 'object'}, 
+        {name: 'c_OriginalLaunch',type: 'object'}, {name: 'c_TargetLaunch',type: 'string'}, 
         {name: 'Notes',type: 'string'}
-    ],
-    hasMany: {
-        model: 'ProjectUserStoryModel',
-        name: 'projectUserStories',
-        associationKey: 'projectUserStories'
-    }
+    ]
 });
-
 Ext.define('ProjectTreeModel', {
     extend: 'Ext.data.TreeModel',
     fields: [
-        {name: '_ref',type: 'string'}, 
-        {name: 'Name',type: 'string'}
-    ],
-    hasMany: {
-        model: 'UserStoryModel',
-        name: 'userStories',
-        associationKey: 'userStories'
-    }
+        {name: '_ref',type: 'string'}, {name: 'Name',type: 'string'}
+    ]
 });
-
 Ext.define('HierarchicalRequirementTreeModel', {
     extend: 'Ext.data.TreeModel',
     fields: [
-        {name: '_ref',type: 'string'}, 
-        {name: '_type',type: 'string'}, 
-        {name: 'Name',type: 'string'}, 
-        {name: 'Project',type: 'object'}, 
-        {name: 'ScheduleState',type: 'string'}, 
-        {name: 'FormattedID',type: 'string'}, 
-        {name: 'Owner',type: 'object'}, 
-        {name: 'Notes',type: 'string'}
+        {name: '_ref',type: 'string'}, {name: '_type',type: 'string'}, 
+        {name: 'Name',type: 'string'}, {name: 'Project',type: 'object'}, 
+        {name: 'ScheduleState',type: 'string'}, {name: 'FormattedID',type: 'string'}, 
+        {name: 'Owner',type: 'object'}, {name: 'Notes',type: 'string'}
     ]
 });
 
@@ -88,7 +65,7 @@ Ext.define('CustomApp', {
             success: function(userStories) {
                 that._createGrid(userStories); //Function to create a grid from retrieved User Stories. Passes in store of User Stories as argument.
             },
-            failue: function() {
+            failure: function() {
                 console.log("Wrong");
             }
         });
@@ -147,7 +124,7 @@ Ext.define('CustomApp', {
                 });
             }
         });
-        console.log(featureProjectsColl);
+        //console.log(featureProjectsColl);
         that._createFeatureTreeStore(_.flatten(featureProjectsColl));
     },
 

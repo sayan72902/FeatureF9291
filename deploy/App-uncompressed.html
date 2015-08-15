@@ -9,96 +9,40 @@
         Rally.onReady(function () {
                 Ext.define('FeatureTreeModel', {
     extend: 'Ext.data.TreeModel',
-    fields: [{
-        name: '_ref',
-        type: 'string'
-    }, {
-        name: '_type',
-        type: 'string'
-    }, {
-        name: 'Name',
-        type: 'string'
-    }, {
-        name: 'Project',
-        type: 'object'
-    }, {
-        name: 'State',
-        type: 'object'
-    }, {
-        name: 'PercentDoneByStoryCount',
-        type: 'double'
-    }, {
-        name: 'FormattedID',
-        type: 'string'
-    }, {
-        name: 'Owner',
-        type: 'object'
-    }, {
-        name: 'c_Customer',
-        type: 'string'
-    }, {
-        name: 'c_LaunchRisk',
-        type: 'object'
-    }, {
-        name: 'c_OriginalLaunch',
-        type: 'object'
-    }, {
-        name: 'c_TargetLaunch',
-        type: 'string'
-    }, {
-        name: 'Notes',
-        type: 'string'
-    }],
-    hasMany: {
+    fields: [
+        {name: '_ref',type: 'string'}, {name: '_type',type: 'string'}, 
+        {name: 'Name',type: 'string'}, {name: 'Project',type: 'object'}, 
+        {name: 'State',type: 'object'}, {name: 'PercentDoneByStoryCount',type: 'double'}, 
+        {name: 'FormattedID',type: 'string'}, {name: 'Owner',type: 'object'}, 
+        {name: 'c_Customer',type: 'string'}, {name: 'c_LaunchRisk',type: 'object'}, 
+        {name: 'c_OriginalLaunch',type: 'object'}, {name: 'c_TargetLaunch',type: 'string'}, 
+        {name: 'Notes',type: 'string'}
+    ]
+    /*hasMany: {
         model: 'ProjectUserStoryModel',
         name: 'projectUserStories',
         associationKey: 'projectUserStories'
-    }
+    }*/
 });
 Ext.define('ProjectTreeModel', {
     extend: 'Ext.data.TreeModel',
-    fields: [{
-        name: '_ref',
-        type: 'string'
-    }, {
-        name: 'Name',
-        type: 'string'
-    }],
-    hasMany: {
+    fields: [
+        {name: '_ref',type: 'string'}, {name: 'Name',type: 'string'}
+    ]
+    /*hasMany: {
         model: 'UserStoryModel',
         name: 'userStories',
         associationKey: 'userStories'
-    }
+    }*/
 });
-
 Ext.define('HierarchicalRequirementTreeModel', {
     extend: 'Ext.data.TreeModel',
-    fields: [{
-            name: '_ref',
-            type: 'string'
-        }, {
-            name: '_type',
-            type: 'string'
-        }, {
-            name: 'Name',
-            type: 'string'
-        }, {
-            name: 'Project',
-            type: 'object'
-        }, {
-            name: 'ScheduleState',
-            type: 'string'
-        }, {
-            name: 'FormattedID',
-            type: 'string'
-        }, {
-            name: 'Owner',
-            type: 'object'
-        }, {
-            name: 'Notes',
-            type: 'string'
-        }]
-        //hasMany: {model: 'UserStoryTreeModel', name:'userStories', associationKey: 'userStories'}
+    fields: [
+        {name: '_ref',type: 'string'}, {name: '_type',type: 'string'}, 
+        {name: 'Name',type: 'string'}, {name: 'Project',type: 'object'}, 
+        {name: 'ScheduleState',type: 'string'}, {name: 'FormattedID',type: 'string'}, 
+        {name: 'Owner',type: 'object'}, {name: 'Notes',type: 'string'}
+    ]
 });
 
 /*Created to hold respective collection objects*/
@@ -110,15 +54,11 @@ Ext.define('CustomApp', {
     extend: 'Rally.app.App',
     componentCls: 'app',
 
-
-
     launch: function() {
         this._loadFeatures();
     },
-
-
+    
     _loadFeatures: function() {
-
         var that = this;
 
         /*Filters out Feature records based on State.*/
@@ -128,9 +68,7 @@ Ext.define('CustomApp', {
             value: 'Started'
         }];
 
-        /*console.log('got data!', featureFilter);*/
-
-        /*Creates a store to hold Feature Records and their associated User Stories*/
+        /*Creates a store to hold Feature Records and their associated User Stories. First, features which are filtered by "State" are retrieved. Then, a loop executes, retrieving all User Stories mapped to a particular Feature.*/
         var featureStore = Ext.create('Rally.data.wsapi.Store', {
             model: "PortfolioItem/Feature",
             autoLoad: true,
@@ -140,43 +78,40 @@ Ext.define('CustomApp', {
             },
             fetch: ['Name', 'Project', 'State', 'PercentDoneByStoryCount', 'FormattedID', 'Owner', 'c_LaunchRisk', 'c_OriginalLaunch', 'c_TargetLaunch', 'c_Customer', 'Notes', "UserStories"]
         }).load().then({
-            success: this._loadUserStories,
+            success: this._loadUserStories, // Asynchronous method call to retrieve User Stories by Feature, after all features in state 'Started' have been retrieved. Passes in the store                                 of features as argument.
             scope: this
         }).then({
             success: function(userStories) {
-                that._createGrid(userStories);
+                that._createGrid(userStories); //Function to create a grid from retrieved User Stories. Passes in store of User Stories as argument.
             },
-            failue: function() {
+            failure: function() {
                 console.log("Wrong");
             }
         });
     },
 
+
     _loadUserStories: function(features) {
-        var promises = [];
+        var promises = [];                     //Empty array object. Created to hold user stories grouped by feature.
         _.each(features, function(feature) {
             var userStories = feature.get('UserStories');
             if (userStories.Count > 0) {
                 userStories.store = feature.getCollection('UserStories' /*{fetch:['Name', 'Project','ScheduleState', 'FormattedID', 'Owner', 'Notes']}*/ );
                 promises.push(userStories.store.load());
             }
-
         });
-
-        return Deft.Promise.all(promises);
+        return Deft.Promise.all(promises); //Consolidates
     },
 
     _createGrid: function(userStories) {
         var that = this;
         var userStoryData = _.flatten(userStories);
 
-
         _.each(userStoryData, function(thisUserStory) {
 
             var thisUserStoryData = thisUserStory.data;
             var featureRecord = thisUserStoryData.Feature;
             var projectRecord = thisUserStoryData.Project;
-
 
             if (featureProjectsColl !== null && featureProjectsColl.length > 0) {
                 var isPresent = false;
@@ -208,9 +143,8 @@ Ext.define('CustomApp', {
                 });
             }
         });
-        console.log(featureProjectsColl);
+        //console.log(featureProjectsColl);
         that._createFeatureTreeStore(_.flatten(featureProjectsColl));
-
     },
 
     _mapUserStoriesToProject: function(projectRecord, thisUserStoryData) {
@@ -243,10 +177,7 @@ Ext.define('CustomApp', {
                 value: userStoriesColl
             });
         }
-
     },
-
-
 
     _createFeatureTreeStore: function(flattenedFeatureProjectsColl) {
         var featureRootNode = Ext.create('FeatureTreeModel', {
@@ -259,12 +190,6 @@ Ext.define('CustomApp', {
         this._createFeatureNodesWithProjects(featureRootNode, flattenedFeatureProjectsColl);
         var panelHeight = 550;
         var userStoryTreePanel = this._createFeatureTreePanelGrid(featureRootNode, panelHeight);
-
-        /*var container = Ext.getCmp();
-        if (container) {
-            container.add(userStoryTreePanel);
-        }*/
-
         this.add(userStoryTreePanel);
     },
 
@@ -277,15 +202,14 @@ Ext.define('CustomApp', {
             var featureTreeNode = that._createFeatureTreeNode(thisFlattenedFeatureProjectKey);
             Ext.Array.each(thisFlattenedFeatureProjectValue, function(thisProjectUserStory) {
 
-
                 var projectUserStoryTreeNode = that._createProjectUserStoryTreeNode(thisProjectUserStory.key);
                 var thisUserStoryCollectionObject = thisProjectUserStory.value;
                 var current = that;
+
                 Ext.Array.each(thisUserStoryCollectionObject, function(currentUserStory) {
                     var userStoryTreeNode = current._createUserStoryTreeNode(currentUserStory);
                     projectUserStoryTreeNode.appendChild(userStoryTreeNode);
                 });
-
                 featureTreeNode.appendChild(projectUserStoryTreeNode);
             });
             featureRootNode.appendChild(featureTreeNode);
@@ -318,15 +242,11 @@ Ext.define('CustomApp', {
     },
 
     _createProjectUserStoryTreeNode: function(thisProjectUserStory) {
-        //console.log(thisProjectUserStory.Owner,thisProjectUserStory.Owner._refObjectName);
         var noEntryText = '--No Entry--';
         var noOwnerText = '--No Owner--';
         var projectUserStoryTreeNode = Ext.create('ProjectTreeModel', {
             _ref: thisProjectUserStory._ref,
             Name: thisProjectUserStory.Name,
-            //FormattedID: thisProjectUserStory.FormattedID,
-            //Project: this._getFieldText(thisProjectUserStory._refObjectName, noEntryText),
-            //ScheduleState: thisProjectUserStory.ScheduleState,
             Owner: (thisProjectUserStory.Owner) ? this._getFieldText(thisProjectUserStory.Owner._refObjectName, noEntryText) : noOwnerText,
             Notes: thisProjectUserStory.Notes,
             expandable: (thisProjectUserStory._type === 'Project') ? true : false,
@@ -353,13 +273,11 @@ Ext.define('CustomApp', {
     },
 
     _createFeatureTreePanelGrid: function(featureRootNode, panelHeight) {
-        //var that = this;
         var userStoryTreeStore = Ext.create('Ext.data.TreeStore', {
             model: 'FeatureTreeModel',
             root: featureRootNode
 
         });
-
         var userStoryItemTreePanel = Ext.create('Ext.tree.Panel', {
             store: userStoryTreeStore,
             useArrows: true,
@@ -416,43 +334,11 @@ Ext.define('CustomApp', {
         });
 
         return userStoryItemTreePanel;
-
     },
 
     _getFieldText: function(fieldValue, defaultValue) {
-            return _.isUndefined(fieldValue) || _.isNull(fieldValue) ? defaultValue : fieldValue;
-        }
-        /*this.add({
-            xtype: 'rallygrid',
-            showPagingToolbar: true,
-            showRowActionsColumn: true,
-            editable: false,
-            store: Ext.create('Rally.data.custom.Store', {
-                data: data,
-                groupField: 'FeatureID'
-            }),
-            features: [{
-                ftype: 'groupingsummary'
-            }],
-            columnCfgs: [{
-                xtype: 'templatecolumn',
-                text: 'ID',
-                dataIndex: 'FormattedID',
-                width: 100,
-                tpl: Ext.create('Rally.ui.renderer.template.FormattedIDTemplate')
-            }, {
-                text: 'Name',
-                dataIndex: 'Name'
-            }, {
-                text: 'Feature',
-                dataIndex: 'Feature',
-                renderer: function(val, meta, record) {
-                    return '<a href="https://rally1.rallydev.com/#/detail/feature/' + record.get('Feature').ObjectID + '" target="_blank">' + record.get('Feature').FormattedID + '</a>';
-                }
-            }]
-        });*/
-
-
+        return _.isUndefined(fieldValue) || _.isNull(fieldValue) ? defaultValue : fieldValue;
+    }
 });
 
 
