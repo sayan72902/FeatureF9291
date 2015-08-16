@@ -59,7 +59,7 @@ Ext.define('CustomApp', {
             },
             fetch: ['Name', 'Project', 'State', 'PercentDoneByStoryCount', 'FormattedID', 'Owner', 'c_LaunchRisk', 'c_OriginalLaunch', 'c_TargetLaunch', 'c_Customer', 'Notes', "UserStories"]
         }).load().then({
-            success: this._loadUserStories, // Asynchronous method call to retrieve User Stories by Feature, after all features in state 'Started' have been retrieved. Passes in the store                                 of features as argument.
+            success: this._loadUserStories, // Asynchronous method call to retrieve User Stories by Feature, after all features in state 'Started' have been retrieved.                                 Passes in the store of features as argument.
             scope: this
         }).then({
             success: function(userStories) {
@@ -71,7 +71,6 @@ Ext.define('CustomApp', {
         });
     },
 
-
     _loadUserStories: function(features) {
         var promises = [];                     //Empty array object. Created to hold user stories grouped by feature.
         _.each(features, function(feature) {
@@ -81,7 +80,7 @@ Ext.define('CustomApp', {
                 promises.push(userStories.store.load());
             }
         });
-        return Deft.Promise.all(promises); //Consolidates
+        return Deft.Promise.all(promises); //Consolidates all user stories into a promise object 
     },
 
     _createGrid: function(userStories) {
@@ -103,7 +102,7 @@ Ext.define('CustomApp', {
                         isPresent = true;
                     }
                 });
-                if (!isPresent) {
+                if (!isPresent) /*If value of isPresent = false*/{
                     projectUserStoriesColl = [];
                     userStoriesColl = [];
                     that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
@@ -139,7 +138,7 @@ Ext.define('CustomApp', {
                     isPresent = true;
                 }
             });
-            if (!isPresent) {
+            if (!isPresent) /*If value of isPresent = false*/{
                 userStoriesColl = [];
                 userStoriesColl.push(thisUserStoryData);
                 projectUserStoriesColl.push({
@@ -237,7 +236,6 @@ Ext.define('CustomApp', {
     },
 
     _createUserStoryTreeNode: function(thisUserStory) {
-        console.log(thisUserStory.Project, thisUserStory.Project._refObjectName);
         var noEntryText = '--No Entry--';
         var noOwnerText = '--No Owner--';
         var userStoryTreeNode = Ext.create('HierarchicalRequirementTreeModel', {
