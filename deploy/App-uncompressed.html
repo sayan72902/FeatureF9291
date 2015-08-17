@@ -59,7 +59,7 @@ Ext.define('CustomApp', {
         }];
 
         /*Creates a store to hold Feature Records and their associated User Stories. First, features which are filtered by "State" are retrieved. Then, a loop executes, retrieving all User Stories mapped to a particular Feature.*/
-        var featureStore = Ext.create('Rally.data.wsapi.Store', {
+        Ext.create('Rally.data.wsapi.Store', {
             model: "PortfolioItem/Feature",
             autoLoad: true,
             filters: featureFilter,
