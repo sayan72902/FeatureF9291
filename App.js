@@ -59,7 +59,7 @@ Ext.define('CustomApp', {
             },
             fetch: ['Name', 'Project', 'State', 'PercentDoneByStoryCount', 'FormattedID', 'Owner', 'c_LaunchRisk', 'c_OriginalLaunch', 'c_TargetLaunch', 'c_Customer', 'Notes', "UserStories"]
         }).load().then({
-            success: this._loadUserStories, // Asynchronous method call to retrieve User Stories by Feature, after all features in state 'Started' have been retrieved.                                 Passes in the store of features as argument.
+            success: this._loadUserStories, // Asynchronous method call to retrieve User Stories by Feature, after all features in state 'Started' have been retrieved.Passes in the store of features as                                     argument.
             scope: this
         }).then({
             success: function(userStories) {
@@ -97,12 +97,13 @@ Ext.define('CustomApp', {
                 var isPresent = false;
                 _.each(featureProjectsColl, function(thisFeatureProject) {
                     var thisFeatureProjectKey = thisFeatureProject.key;
-                    if (thisFeatureProjectKey && thisFeatureProjectKey.FormattedID === featureRecord.FormattedID) {
-                        projectUserStoriesColl = thisFeatureProject.value;
-                        isPresent = true;
+                    if (thisFeatureProjectKey && thisFeatureProjectKey.FormattedID === featureRecord.FormattedID)/*Check if the feature record for the current user story matches with any of the feature                                                                                                 records already present in featureProjectsColl. Goes into this block only for existing                                                                                                 feature records*/ 
+                    {
+                        projectUserStoriesColl = thisFeatureProject.value; // Set child dictionary to the value of the current key in featureProjectsColl
+                        isPresent = true; //Change value of flag variable to invoke _mapUserStoriesToProject directly
                     }
                 });
-                if (!isPresent) /*If value of isPresent = false*/{
+                if (!isPresent) /*If value of isPresent = false. Goes into this block only if the feature record does not already exist in the dictionary*/{
                     projectUserStoriesColl = [];
                     userStoriesColl = [];
                     that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
@@ -111,11 +112,11 @@ Ext.define('CustomApp', {
                         value: projectUserStoriesColl
                     });
                 }
-                else {
+                else /*Goes into this block only for existing feature records*/{
                     that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
                 }
             }
-            else {
+            else /*Goes into this block only for the first record, when featureProjectsColl is empty*/{
                 that._mapUserStoriesToProject(projectRecord, thisUserStoryData);
                 featureProjectsColl.push({
                     key: featureRecord,
@@ -128,17 +129,17 @@ Ext.define('CustomApp', {
     },
 
     _mapUserStoriesToProject: function(projectRecord, thisUserStoryData) {
-
         if (projectUserStoriesColl !== null && projectUserStoriesColl.length > 0) {
             var isPresent = false;
             _.each(projectUserStoriesColl, function(thisProjectUserStory) {
                 var thisprojectUserStoryKey = thisProjectUserStory.key;
-                if (thisprojectUserStoryKey && thisprojectUserStoryKey._ref === projectRecord._ref) {
-                    userStoriesColl = thisProjectUserStory.value;
+                if (thisprojectUserStoryKey && thisprojectUserStoryKey._ref === projectRecord._ref) /*Check if the project record for the current user story matches with any of the project                                                                                                    records already present in projectUserStoriesColl.Goes into this block only for existing project records*/
+                {
+                    userStoriesColl = thisProjectUserStory.value; // Set child collection to the value of the current key in projectUserStoriesColl
                     isPresent = true;
                 }
             });
-            if (!isPresent) /*If value of isPresent = false*/{
+            if (!isPresent) /*If value of isPresent = false. Goes into this block only if the feature record does not already exist in the dictionary*/{
                 userStoriesColl = [];
                 userStoriesColl.push(thisUserStoryData);
                 projectUserStoriesColl.push({
