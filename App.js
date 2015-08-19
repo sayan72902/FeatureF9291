@@ -40,8 +40,10 @@ Ext.define('CustomApp', {
     },
     
     _loadFeatures: function() {
+        
+        Ext.getBody().mask('Loading...');
+        
         var that = this;
-
         /*Filters out Feature records based on State.*/
         var featureFilter = [{
             property: "State.Name",
@@ -64,11 +66,13 @@ Ext.define('CustomApp', {
         }).then({
             success: function(userStories) {
                 that._createGrid(userStories); //Function to create a grid from retrieved User Stories. Passes in store of User Stories as argument.
+                Ext.getBody().unmask();
             },
             failure: function() {
                 console.log("Wrong");
             }
         });
+        
     },
 
     _loadUserStories: function(features) {
